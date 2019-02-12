@@ -20,7 +20,11 @@ void initialize_render(driver_state& state, int width, int height)
     state.image_height=height;
     state.image_color=0;
     state.image_depth=0;
-    std::cout<<"TODO: allocate and initialize state.image_color and state.image_depth."<<std::endl;
+
+    state.image_color = new pixel[width * height];
+    for (int i = 0; i < width * height; ++i) {
+	state.image_color[i] = make_pixel(0, 0, 0);
+    }
 }
 
 // This function will be called to render the data that has been stored in this class.
@@ -32,7 +36,25 @@ void initialize_render(driver_state& state, int width, int height)
 //   render_type::strip -    The vertices are to be interpreted as a triangle strip.
 void render(driver_state& state, render_type type)
 {
-    std::cout<<"TODO: implement rendering."<<std::endl;
+    switch(type) {
+	case render_type::triangle:
+		for (int i = 0; i < state.num_vertices; i += 3) {
+		    data_geometry** triangle =  new data_geometry*[3];
+		    for (int j = 0; j < 3; ++j) {
+			triangle[j]->data = new float[MAX_FLOATS_PER_VERTEX];
+			for (int k = 0; k < state.floats_per_vertex; ++k) {
+			triangle[j]->data[k] = state.vertex_data[i+j+k];
+			}
+		    }
+		    rasterize_triangle(state, triangle);
+		}
+		break;
+	case render_type::indexed: break;
+	case render_type::fan: break;
+	case render_type::strip: break;
+	default: break;
+    }
+    std::cout<<"TODO: implement rendering for indexed, fan, and strip."<<std::endl;
 }
 
 
@@ -56,6 +78,7 @@ void clip_triangle(driver_state& state, const data_geometry* in[3],int face)
 // fragments, calling the fragment shader, and z-buffering.
 void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 {
+    
     std::cout<<"TODO: implement rasterization"<<std::endl;
 }
 
