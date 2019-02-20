@@ -39,11 +39,12 @@ void render(driver_state& state, render_type type)
     switch(type) {
 	case render_type::triangle:
 		for (int i = 0; i < state.num_vertices; i += 3) { // ith triangle
-		    data_geometry* triangle[3];
+		    data_geometry** triangle = new data_geometry*[3];
 		    for (int j = 0; j < 3; ++j) { // jth vertex
+			triangle[j] = new data_geometry;
 			triangle[j]->data = new float[MAX_FLOATS_PER_VERTEX];
 			for (int k = 0; k < state.floats_per_vertex; ++k) {// kth data
-			triangle[j]->data[k] = state.vertex_data[i+j+k];
+			    triangle[j]->data[k] = state.vertex_data[k + state.floats_per_vertex*(i+j)];
 			}
 		    }
 		    rasterize_triangle(state, (const data_geometry**)triangle);
