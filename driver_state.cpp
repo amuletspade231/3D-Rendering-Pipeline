@@ -119,7 +119,7 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 	double alpha = pbc/abc;
 	double beta = apc/abc;
 	double gamma = abp/abc;
-	if (alpha >= 0 && beta >= 0 && gamma >= 0 && (alpha+beta+gamma) < 1.001) {
+	if (alpha >= 0 && beta >= 0 && gamma >= 0) {
 	    int index = px + py * state.image_width;
 	    state.image_color[index] = make_pixel(255,255,255);
 	}
