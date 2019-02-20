@@ -103,24 +103,24 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     int by = (h/2.0)*out[1].gl_Position[1] + (w/2.0) - 0.5;
     int cx = (w/2.0)*out[2].gl_Position[0] + (w/2.0) - 0.5;
     int cy = (h/2.0)*out[2].gl_Position[1] + (w/2.0) - 0.5;
-    std::cout << ax << ay << bx << by << cx << cy << std::endl;
     */
+    
     int ax = pixCor[0][0]; int ay = pixCor[0][1];
     int bx = pixCor[1][0]; int by = pixCor[1][1];
     int cx = pixCor[2][0]; int cy = pixCor[2][1];
-
+    std::cout << ax << ay << bx << by << cx << cy << std::endl;
     double abc = 0.5 * ((bx*cy - cx*by) - (ax*cy - cx*ay) - (ax*by - bx*ay));
 
     for (int py = 0; py < h; ++py) {
     for (int px = 0; px < w; ++px) {
-	double pbc = 0.5 * ((bx*cy - cx*by) - (px*cy - cx*py) - (px*by - bx*py));
-	double apc = 0.5 * ((px*cy - cx*py) - (ax*cy - cx*ay) - (ax*py - px*ay));
-	double abp = 0.5 * ((bx*py - px*by) - (ax*py - px*ay) - (ax*by - bx*ay));
+	double pbc = 0.5 * (px * (by - cy) + bx * (cy - py) + cx * (py - by));
+	double apc = 0.5 * (ax * (py - cy) + px * (cy - ay) + cx * (ay - by));
+	double abp = 0.5 * (ax * (by - py) + bx * (py - ay) + px * (ay - by));
 	double alpha = pbc/abc;
 	double beta = apc/abc;
 	double gamma = abp/abc;
 	if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-	    int index = px + py * state.image_width;
+	    int index = px + py * w;
 	    state.image_color[index] = make_pixel(255,255,255);
 	}
     }
