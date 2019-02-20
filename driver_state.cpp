@@ -109,17 +109,17 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     int bx = pixCor[1][0]; int by = pixCor[1][1];
     int cx = pixCor[2][0]; int cy = pixCor[2][1];
     std::cout << ax << ay << bx << by << cx << cy << std::endl;
-    double abc = 0.5 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+    double abc = 0.5 * ((bx*cy - cx*by) - (ax*cy - cx*ay) - (ax*by - bx*ay));
 
     for (int py = 0; py < h; ++py) {
     for (int px = 0; px < w; ++px) {
-	double pbc = 0.5 * (px * (by - cy) + bx * (cy - py) + cx * (py - by));
-	double apc = 0.5 * (ax * (py - cy) + px * (cy - ay) + cx * (ay - by));
-	double abp = 0.5 * (ax * (by - py) + bx * (py - ay) + px * (ay - by));
+	double pbc = 0.5 * ((bx*cy - cx*by) + (by - cy)*px + (cx - bx)*py);
+	double apc = 0.5 * ((ax*cy - cx*ay) + (cy - ay)*px + (ax - cx)*py);
+	double abp = 0.5 * ((ax*by - bx*ay) + (ay - by)*px + (bx - ax)*py);
 	double alpha = pbc/abc;
 	double beta = apc/abc;
 	double gamma = abp/abc;
-	if (alpha >= 0 && beta >= 0 && gamma >= 0 && (alpha+beta+gamma) < 1.001) {
+	if (alpha >= 0 && beta >= 0 && gamma >= 0) {
 	    int index = px + py * w;
 	    state.image_color[index] = make_pixel(255,255,255);
 	}
