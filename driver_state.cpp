@@ -113,7 +113,7 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 
     for (int py = 0; py < h; ++py) {
     for (int px = 0; px < w; ++px) {
-	double pbc = 0.5 * (px * (by - cy) + bx * (cy - py) + cx * (py - by));
+	double pbc = 0.5 * (px * (by - cy) + bx * (cy - py) + cx * (px - by));
 	double apc = 0.5 * (ax * (py - cy) + px * (cy - ay) + cx * (ay - by));
 	double abp = 0.5 * (ax * (by - py) + bx * (py - ay) + px * (ay - by));
 	double alpha = pbc/abc;
