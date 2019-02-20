@@ -87,7 +87,7 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 	v.data = in[index]->data;
 	state.vertex_shader((const data_vertex)v, out[index], state.uniform_data);
 
-	out[index].gl_Position /= w;
+	out[index].gl_Position /= out[index].gl_Position[3];
 	auto x = out[index].gl_Position[0];
 	auto y = out[index].gl_Position[1];
 	int i = (w/2.0)*x + w/2.0 - 0.5;
@@ -102,24 +102,20 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     int by = (h/2.0)*out[1].gl_Position[1] + (w/2.0) - 0.5;
     int cx = (w/2.0)*out[2].gl_Position[0] + (w/2.0) - 0.5;
     int cy = (h/2.0)*out[2].gl_Position[1] + (w/2.0) - 0.5;
-    float abc = 0.5 * ((bx*cy - cx*by) - (ax*cy - cx*ay) - (ax*by - bx*ay));
-    int px = 0; int py = 0;
-    for (int i = 0; i < w*h; ++i) {
-	if (i >= w) {
-	    px = w / i;
-	    py = w % i;
-	} else {
-	    py++;
-	}
-	float pbc = 0.5 * ((bx*cy - cx*by) - (px*cy - cx*py) - (px*by - bx*py));
-	float apc = 0.5 * ((px*cy - cx*py) - (ax*cy - cx*ay) - (ax*py - px*ay));
-	float abp = 0.5 * ((bx*py - px*by) - (ax*py - px*ay) - (ax*by - bx*ay));
-	float alpha = pbc/abc;
-	float beta = apc/abc;
-	float gamma = abp/abc;
+    double abc = 0.5 * ((bx*cy - cx*by) - (ax*cy - cx*ay) - (ax*by - bx*ay));
+    for (int py = 0; py < h; ++py) {
+    for (int px = 0; px < w; ++px) {
+	double pbc = 0.5 * ((bx*cy - cx*by) - (px*cy - cx*py) - (px*by - bx*py));
+	double apc = 0.5 * ((px*cy - cx*py) - (ax*cy - cx*ay) - (ax*py - px*ay));
+	double abp = 0.5 * ((bx*py - px*by) - (ax*py - px*ay) - (ax*by - bx*ay));
+	double alpha = pbc/abc;
+	double beta = apc/abc;
+	double gamma = abp/abc;
 	if (alpha >= 0 && beta >= 0 && gamma >= 0) {
-	    state.image_color[i] = make_pixel(255,255,255);
+	    int index = px + py * state.image_width;
+	    state.image_color[index] = make_pixel(255,255,255);
 	}
+    }
     }
     
     std::cout<<"TODO: implement rasterization"<<std::endl;
