@@ -39,7 +39,7 @@ void render(driver_state& state, render_type type)
     switch(type) {
 	case render_type::triangle:
 		for (int i = 0; i < state.num_vertices; i += 3) { // ith triangle
-		    data_geometry** triangle =  new data_geometry*[3];
+		    data_geometry* triangle[3];
 		    for (int j = 0; j < 3; ++j) { // jth vertex
 			triangle[j]->data = new float[MAX_FLOATS_PER_VERTEX];
 			for (int k = 0; k < state.floats_per_vertex; ++k) {// kth data
@@ -89,22 +89,36 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 	out[index].gl_Position /= w;
 	auto x = out[index].gl_Position[0];
 	auto y = out[index].gl_Position[1];
-	int i = (w/2.0)*x + w/2.0 + 0.5;
-	int j = (h/2.0)*y + h/2.0 + 0.5;
+	int i = (w/2.0)*x + w/2.0 - 0.5;
+	int j = (h/2.0)*y + h/2.0 - 0.5;
 	int image_index = i + j * w;
 	state.image_color[image_index] = make_pixel(255,255,255);
     }
     
-    int ax = (w/2.0)*out[0].gl_Position[0] + (w/2.0) + 0.5;
-    int ay = (h/2.0)*out[0].gl_Position[1] + (w/2.0) + 0.5;
-    int bx = (w/2.0)*out[1].gl_Position[0] + (w/2.0) + 0.5;
-    int by = (h/2.0)*out[1].gl_Position[1] + (w/2.0) + 0.5;
-    int cx = (w/2.0)*out[2].gl_Position[0] + (w/2.0) + 0.5;
-    int cy = (h/2.0)*out[2].gl_Position[1] + (w/2.0) + 0.5;
-    
-
+    int ax = (w/2.0)*out[0].gl_Position[0] + (w/2.0) - 0.5;
+    int ay = (h/2.0)*out[0].gl_Position[1] + (w/2.0) - 0.5;
+    int bx = (w/2.0)*out[1].gl_Position[0] + (w/2.0) - 0.5;
+    int by = (h/2.0)*out[1].gl_Position[1] + (w/2.0) - 0.5;
+    int cx = (w/2.0)*out[2].gl_Position[0] + (w/2.0) - 0.5;
+    int cy = (h/2.0)*out[2].gl_Position[1] + (w/2.0) - 0.5;
+    float abc = 0.5 * ((bx*cy - cx*by) - (ax*cy - cx*ay) - (ax*by - bx*ay));
+    int px = 0; int py = 0;
     for (int i = 0; i < w*h; ++i) {
-	
+	if (i >= w) {
+	    px = w / i;
+	    py = w % i;
+	} else {
+	    py++;
+	}
+	float pbc = 0.5 * ((bx*cy - cx*by) - (px*cy - cx*py) - (px*by - bx*py));
+	float apc = 0.5 * ((px*cy - cx*py) - (ax*cy - cx*ay) - (ax*py - px*ay));
+	float abp = 0.5 * ((bx*py - px*by) - (ax*py - px*ay) - (ax*by - bx*ay));
+	float alpha = pbc/abc;
+	float beta = apc/abc;
+	float gamma = abp/abc;
+	if (alpha >= 0 && beta >= 0 && gamma >= 0) {
+	    state.image_color[i] = make_pixel(255,255,255);
+	}
     }
     
     std::cout<<"TODO: implement rasterization"<<std::endl;
