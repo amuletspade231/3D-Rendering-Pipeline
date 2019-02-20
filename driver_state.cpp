@@ -109,11 +109,11 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     int bx = pixCor[1][0]; int by = pixCor[1][1];
     int cx = pixCor[2][0]; int cy = pixCor[2][1];
     std::cout << ax << ay << bx << by << cx << cy << std::endl;
-    double abc = 0.5 * ((bx*cy - cx*by) - (ax*cy - cx*ay) - (ax*by - bx*ay));
+    double abc = 0.5 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
 
     for (int py = 0; py < h; ++py) {
     for (int px = 0; px < w; ++px) {
-	double pbc = 0.5 * (px * (by - cy) + bx * (cy - py) + cx * (px - by));
+	double pbc = 0.5 * (px * (by - cy) + bx * (cy - py) + cx * (py - by));
 	double apc = 0.5 * (ax * (py - cy) + px * (cy - ay) + cx * (ay - by));
 	double abp = 0.5 * (ax * (by - py) + bx * (py - ay) + px * (ay - by));
 	double alpha = pbc/abc;
