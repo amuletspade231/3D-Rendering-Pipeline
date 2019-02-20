@@ -38,15 +38,15 @@ void render(driver_state& state, render_type type)
 {
     switch(type) {
 	case render_type::triangle:
-		for (int i = 0; i < state.num_vertices; i += 3) {
+		for (int i = 0; i < state.num_vertices; i += 3) { // ith triangle
 		    data_geometry** triangle =  new data_geometry*[3];
-		    for (int j = 0; j < 3; ++j) {
+		    for (int j = 0; j < 3; ++j) { // jth vertex
 			triangle[j]->data = new float[MAX_FLOATS_PER_VERTEX];
-			for (int k = 0; k < state.floats_per_vertex; ++k) {
+			for (int k = 0; k < state.floats_per_vertex; ++k) {// kth data
 			triangle[j]->data[k] = state.vertex_data[i+j+k];
 			}
 		    }
-		    rasterize_triangle(state, triangle);
+		    rasterize_triangle(state, (const data_geometry**)triangle);
 		}
 		break;
 	case render_type::indexed: break;
@@ -78,6 +78,34 @@ void clip_triangle(driver_state& state, const data_geometry* in[3],int face)
 // fragments, calling the fragment shader, and z-buffering.
 void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 {
+    data_geometry* out = new data_geometry[3];
+    int w = state.image_width;
+    int h = state.image_height;
+    for (int index = 0; index < 3; ++index) {
+	data_vertex v;
+	v.data = in[index]->data;
+	state.vertex_shader((const data_vertex)v, out[index], state.uniform_data);
+
+	out[index].gl_Position /= w;
+	auto x = out[index].gl_Position[0];
+	auto y = out[index].gl_Position[1];
+	int i = (w/2.0)*x + w/2.0 + 0.5;
+	int j = (h/2.0)*y + h/2.0 + 0.5;
+	int image_index = i + j * w;
+	state.image_color[image_index] = make_pixel(255,255,255);
+    }
+    
+    int ax = (w/2.0)*out[0].gl_Position[0] + (w/2.0) + 0.5;
+    int ay = (h/2.0)*out[0].gl_Position[1] + (w/2.0) + 0.5;
+    int bx = (w/2.0)*out[1].gl_Position[0] + (w/2.0) + 0.5;
+    int by = (h/2.0)*out[1].gl_Position[1] + (w/2.0) + 0.5;
+    int cx = (w/2.0)*out[2].gl_Position[0] + (w/2.0) + 0.5;
+    int cy = (h/2.0)*out[2].gl_Position[1] + (w/2.0) + 0.5;
+    
+
+    for (int i = 0; i < w*h; ++i) {
+	
+    }
     
     std::cout<<"TODO: implement rasterization"<<std::endl;
 }
