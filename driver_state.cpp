@@ -82,6 +82,7 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     data_geometry* out = new data_geometry[3];
     int w = state.image_width;
     int h = state.image_height;
+    int pixCor[3][2];
     for (int index = 0; index < 3; ++index) {
 	data_vertex v;
 	v.data = in[index]->data;
@@ -90,19 +91,26 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 	out[index].gl_Position /= out[index].gl_Position[3];
 	auto x = out[index].gl_Position[0];
 	auto y = out[index].gl_Position[1];
-	int i = (w/2.0)*x + w/2.0 - 0.5;
-	int j = (h/2.0)*y + h/2.0 - 0.5;
-	int image_index = i + j * w;
+	pixCor[index][0] = (w/2.0)*x + w/2.0 - 0.5;
+	pixCor[index][1] = (h/2.0)*y + h/2.0 - 0.5;
+	int image_index = pixCor[index][0] + pixCor[index][1] * w;
 	state.image_color[image_index] = make_pixel(255,255,255);
     }
-    
+    /*
     int ax = (w/2.0)*out[0].gl_Position[0] + (w/2.0) - 0.5;
     int ay = (h/2.0)*out[0].gl_Position[1] + (w/2.0) - 0.5;
     int bx = (w/2.0)*out[1].gl_Position[0] + (w/2.0) - 0.5;
     int by = (h/2.0)*out[1].gl_Position[1] + (w/2.0) - 0.5;
     int cx = (w/2.0)*out[2].gl_Position[0] + (w/2.0) - 0.5;
     int cy = (h/2.0)*out[2].gl_Position[1] + (w/2.0) - 0.5;
+    std::cout << ax << ay << bx << by << cx << cy << std::endl;
+    */
+    int ax = pixCor[0][0]; int ay = pixCor[0][1];
+    int bx = pixCor[1][0]; int by = pixCor[1][1];
+    int cx = pixCor[2][0]; int cy = pixCor[2][1];
+
     double abc = 0.5 * ((bx*cy - cx*by) - (ax*cy - cx*ay) - (ax*by - bx*ay));
+
     for (int py = 0; py < h; ++py) {
     for (int px = 0; px < w; ++px) {
 	double pbc = 0.5 * ((bx*cy - cx*by) - (px*cy - cx*py) - (px*by - bx*py));
