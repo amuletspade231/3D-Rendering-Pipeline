@@ -127,15 +127,17 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 	    
 	    for (int i = 0; i < state.floats_per_vertex; ++i) {
 		float k_gour;
+		float a_persp, b_persp, g_persp;
 		switch(state.interp_rules[i]) {
 		    case interp_type::flat:
 			f.data[i] = in[0]->data[i];
 			break;
 		    case interp_type::smooth:
 			k_gour = (alpha/in[0]->gl_Position[3] + beta/in[1]->gl_Position[3] + gamma/in[2]->gl_Position[3]);
-			alpha /= (k_gour * (in[0]->gl_Position[3]));
-			beta /= (k_gour * (in[1]->gl_Position[3]));
-			gamma /= (k_gour * (in[2]->gl_Position[3]));
+			a_persp = alpha / (k_gour * (in[0]->gl_Position[3]));
+			b_persp = beta / (k_gour * (in[1]->gl_Position[3]));
+			g_persp = gamma / (k_gour * (in[2]->gl_Position[3]));
+			f.data[i] = a_persp*in[0]->data[i] + b_persp*in[1]->data[i] + g_persp*in[2]->data[i];
 			break;
 		    case interp_type::noperspective:
 			f.data[i] = alpha*in[0]->data[i] + beta*in[1]->data[i] + gamma*in[2]->data[i];
@@ -146,7 +148,7 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 	    }
 	    state.fragment_shader((const data_fragment)f, o, state.uniform_data);
 	    o.output_color *= 255;
-	    //std::cout << o.output_color << std::endl;
+//	    std::cout << o.output_color << std::endl;
 	    state.image_color[index] = make_pixel(o.output_color[0],o.output_color[1],o.output_color[2]);
 	    //state.image_color[index] = make_pixel(255,255,255);
 	}
