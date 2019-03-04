@@ -44,8 +44,10 @@ void render(driver_state& state, render_type type)
 			triangle[j] = new data_geometry;
 			data_vertex v;
 			v.data = new float[MAX_FLOATS_PER_VERTEX];
+			triangle[j]->data = new float[MAX_FLOATS_PER_VERTEX];
 			for (int k = 0; k < state.floats_per_vertex; ++k) {// kth data
 			    v.data[k] = state.vertex_data[k + state.floats_per_vertex*(i+j)];
+			    triangle[j]->data[k] = v.data[k];
 			}
 			state.vertex_shader((const data_vertex)v, *triangle[j], state.uniform_data);
 		    }
@@ -81,37 +83,32 @@ void clip_triangle(driver_state& state, const data_geometry* in[3],int face)
 // fragments, calling the fragment shader, and z-buffering.
 void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 {
-    //data_geometry* out = new data_geometry[3];
     int w = state.image_width;
     int h = state.image_height;
     int pixCor[3][2];
     for (int index = 0; index < 3; ++index) {
-	//data_vertex v;
-	//v.data = in[index]->data;
-	//state.vertex_shader((const data_vertex)v, out[index], state.uniform_data);
-
-	//out[index].gl_Position /= out[index].gl_Position[3];
 	auto x = in[index]->gl_Position[0]/in[index]->gl_Position[3];
 	auto y = in[index]->gl_Position[1]/in[index]->gl_Position[3];
-	std::cout << x << y << std::endl;
+	//std::cout << "x: " << x << " y: " << y << std::endl;
 	pixCor[index][0] = (w/2.0)*x + w/2.0 - 0.5;
 	pixCor[index][1] = (h/2.0)*y + h/2.0 - 0.5;
 	int image_index = pixCor[index][0] + pixCor[index][1] * w;
-	state.image_color[image_index] = make_pixel(255,255,255);
+//	data_fragment f;
+//	f.data = new float[MAX_FLOATS_PER_VERTEX];
+//	for (int i = 0; i < state.floats_per_vertex; ++i) {
+//	    f.data[i] = in[index]->data[i];
+//	}
+//	data_output o;
+//	state.fragment_shader((const data_fragment)f, o, state.uniform_data);
+//	std::cout
+//	o.output_color *= 225;
+//	state.image_color[image_index] = make_pixel(o.output_color[0],o.output_color[1],o.output_color[2]);
     }
-    /*
-    int ax = (w/2.0)*out[0].gl_Position[0] + (w/2.0) - 0.5;
-    int ay = (h/2.0)*out[0].gl_Position[1] + (w/2.0) - 0.5;
-    int bx = (w/2.0)*out[1].gl_Position[0] + (w/2.0) - 0.5;
-    int by = (h/2.0)*out[1].gl_Position[1] + (w/2.0) - 0.5;
-    int cx = (w/2.0)*out[2].gl_Position[0] + (w/2.0) - 0.5;
-    int cy = (h/2.0)*out[2].gl_Position[1] + (w/2.0) - 0.5;
-    */
     
     int ax = pixCor[0][0]; int ay = pixCor[0][1];
     int bx = pixCor[1][0]; int by = pixCor[1][1];
     int cx = pixCor[2][0]; int cy = pixCor[2][1];
-    std::cout << ax << " " << ay << " " << bx << " " << by << " " << cx << " " << cy << std::endl;
+    //std::cout << ax << " " << ay << " " << bx << " " << by << " " << cx << " " << cy << std::endl;
     double abc = 0.5 * ((bx*cy - cx*by) - (ax*cy - cx*ay) + (ax*by - bx*ay));
 
     for (int py = 0; py < h; ++py) {
@@ -124,11 +121,38 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 	double gamma = abp/abc;
 	if (alpha >= 0 && beta >= 0 && gamma >= 0) {
 	    int index = px + py * w;
-	    state.image_color[index] = make_pixel(255,255,255);
+	    auto *data = new float[MAX_FLOATS_PER_VERTEX];
+	    data_fragment f{data};
+	    data_output o;
+	    
+	    for (int i = 0; i < state.floats_per_vertex; ++i) {
+		float k_gour;
+		switch(state.interp_rules[i]) {
+		    case interp_type::flat:
+			f.data[i] = in[0]->data[i];
+			break;
+		    case interp_type::smooth:
+			k_gour = (alpha/in[0]->gl_Position[3] + beta/in[1]->gl_Position[3] + gamma/in[2]->gl_Position[3]);
+			alpha /= (k_gour * (in[0]->gl_Position[3]));
+			beta /= (k_gour * (in[1]->gl_Position[3]));
+			gamma /= (k_gour * (in[2]->gl_Position[3]));
+			break;
+		    case interp_type::noperspective:
+			f.data[i] = alpha*in[0]->data[i] + beta*in[1]->data[i] + gamma*in[2]->data[i];
+			break;
+		    default:
+			break;
+		}
+	    }
+	    state.fragment_shader((const data_fragment)f, o, state.uniform_data);
+	    o.output_color *= 255;
+	    //std::cout << o.output_color << std::endl;
+	    state.image_color[index] = make_pixel(o.output_color[0],o.output_color[1],o.output_color[2]);
+	    //state.image_color[index] = make_pixel(255,255,255);
 	}
     }
     }
     
-    std::cout<<"TODO: implement rasterization"<<std::endl;
+    //std::cout<<"TODO: implement rasterization"<<std::endl;
 }
 
