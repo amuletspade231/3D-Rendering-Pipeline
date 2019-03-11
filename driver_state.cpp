@@ -223,7 +223,8 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
     //std::cout << "rasterize\n";
     int w = state.image_width;
     int h = state.image_height;
-    int pixCor[3][2];
+    //int pixCor[3][2];
+    /*
     for (int index = 0; index < 3; ++index) {
 	auto x = in[index]->gl_Position[0]/in[index]->gl_Position[3];
 	auto y = in[index]->gl_Position[1]/in[index]->gl_Position[3];
@@ -231,20 +232,32 @@ void rasterize_triangle(driver_state& state, const data_geometry* in[3])
 	pixCor[index][1] = (h/2.0)*y + h/2.0 - 0.5;
 	//int image_index = pixCor[index][0] + pixCor[index][1] * w;
     }
-    
-    int ax = pixCor[0][0]; int ay = pixCor[0][1];
-    int bx = pixCor[1][0]; int by = pixCor[1][1];
-    int cx = pixCor[2][0]; int cy = pixCor[2][1];
+    */
+    //float ax = pixCor[0][0]; float ay = pixCor[0][1];
+    //float bx = pixCor[1][0]; float by = pixCor[1][1];
+    //float cx = pixCor[2][0]; float cy = pixCor[2][1];
+   
+    float ax = (w/2.0)*(in[0]->gl_Position[0] / in[0]->gl_Position[3]) + (w/2.0) - (0.5);
+    float ay = (h/2.0)*(in[0]->gl_Position[1] / in[0]->gl_Position[3]) + (h/2.0) - (0.5);
+    float bx = (w/2.0)*(in[1]->gl_Position[0] / in[1]->gl_Position[3]) + (w/2.0) - (0.5);
+    float by = (h/2.0)*(in[1]->gl_Position[1] / in[1]->gl_Position[3]) + (h/2.0) - (0.5);
+    float cx = (w/2.0)*(in[2]->gl_Position[0] / in[2]->gl_Position[3]) + (w/2.0) - (0.5);
+    float cy = (h/2.0)*(in[2]->gl_Position[1] / in[2]->gl_Position[3]) + (h/2.0) - (0.5);
 
-    //float minX = std::min(0, std::min(ax, std::min(bx, cx)));
-    //float maxX = std::max(std::max(ax, std::max(bx, cx)), w);
-    //float minY = std::min(0, std::min(ay, std::min(by, cy)));
-    //float maxY = std::max(std::max(ay, std::max(by, cy)), h);
+    float minX = std::min(ax, std::min(bx, cx));
+    float maxX = std::max(ax, std::max(bx, cx));
+    float minY = std::min(ay, std::min(by, cy));
+    float maxY = std::max(ay, std::max(by, cy));
+
+    if (minX < 0) { minX = 0; }
+    if (minY < 0) { minY = 0; }
+    if (maxX > w) { maxX = w; }
+    if (maxY > h) { maxY = h; }
 
     double abc = 0.5 * ((bx*cy - cx*by) - (ax*cy - cx*ay) + (ax*by - bx*ay));
 
-    for (int py = 0; py < h; ++py) {
-    for (int px = 0; px < w; ++px) {
+    for (int py = minY; py <= maxY; ++py) {
+    for (int px = minX; px <= maxX; ++px) {
 
 	double pbc = 0.5 * ((bx*cy - cx*by) + (by - cy)*px + (cx - bx)*py);
 	double apc = 0.5 * ((cx*ay - ax*cy) + (cy - ay)*px + (ax - cx)*py);
